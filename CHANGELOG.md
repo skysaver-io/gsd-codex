@@ -6,6 +6,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- OpenAI Codex adapter (CLI/app) with skill-based GSD commands and `--codex` installer flag
+
 ## [1.18.0] - 2026-02-08
 
 ### Added
