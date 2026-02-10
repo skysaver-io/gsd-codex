@@ -4,6 +4,8 @@
 
 **A light-weight and powerful meta-prompting, context engineering and spec-driven development system for Claude Code, OpenCode, Gemini CLI, and Codex.**
 
+**Fork focus:** This repository is the **`skysaver-io/gsd-codex`** fork, focused on making GSD work seamlessly with **OpenAI Codex** (CLI and the macOS Codex app). If you're looking for upstream changes, see the original `gsd-build/get-shit-done` repo.
+
 **Solves context rot — the quality degradation that happens as Claude fills its context window.**
 
 [![npm version](https://img.shields.io/npm/v/get-shit-done-cc?style=for-the-badge&logo=npm&logoColor=white&color=CB3837)](https://www.npmjs.com/package/get-shit-done-cc)
