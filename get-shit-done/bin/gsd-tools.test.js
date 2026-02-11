@@ -520,6 +520,29 @@ This phase covers:
     assert.strictEqual(output.found, false, 'should return not found');
     assert.strictEqual(output.error, 'ROADMAP.md not found', 'should explain why');
   });
+
+  test('supports level-2 phase headings and normalized phase input', () => {
+    fs.writeFileSync(
+      path.join(tmpDir, '.planning', 'ROADMAP.md'),
+      `# Roadmap v1.0
+
+## Phase 1: Foundation
+**Goal:** Set up infrastructure
+
+## Phase 2: API
+**Goal:** Build endpoints
+`
+    );
+
+    const result = runGsdTools('roadmap get-phase 01', tmpDir);
+    assert.ok(result.success, `Command failed: ${result.error}`);
+
+    const output = JSON.parse(result.output);
+    assert.strictEqual(output.found, true, 'phase should be found');
+    assert.strictEqual(output.phase_number, '1', 'phase number should come from roadmap');
+    assert.strictEqual(output.phase_name, 'Foundation', 'phase name should parse from ## heading');
+    assert.strictEqual(output.goal, 'Set up infrastructure', 'goal should parse');
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1190,6 +1213,55 @@ describe('init commands with --include flag', () => {
     assert.ok(output.state_content, 'state_content included');
     assert.strictEqual(output.roadmap_content, undefined, 'roadmap_content not requested, should be undefined');
   });
+
+  test('init phase-op finds roadmap phase when phase directory is missing', () => {
+    fs.rmSync(path.join(tmpDir, '.planning', 'phases'), { recursive: true, force: true });
+    fs.writeFileSync(
+      path.join(tmpDir, '.planning', 'ROADMAP.md'),
+      `# Roadmap
+
+### Phase 1: Foundation
+**Goal:** Set up project
+`
+    );
+
+    const result = runGsdTools('init phase-op 1', tmpDir);
+    assert.ok(result.success, `Command failed: ${result.error}`);
+
+    const output = JSON.parse(result.output);
+    assert.strictEqual(output.phase_found, true, 'phase should be found from roadmap');
+    assert.strictEqual(output.phase_dir_exists, false, 'phase directory should be absent');
+    assert.strictEqual(output.phase_in_roadmap, true, 'phase should exist in roadmap');
+    assert.strictEqual(output.phase_dir, null, 'phase dir should be null when not scaffolded');
+    assert.strictEqual(output.phase_number, '1', 'phase number should come from roadmap');
+    assert.strictEqual(output.phase_name, 'Foundation', 'phase name should come from roadmap');
+    assert.strictEqual(output.phase_slug, 'foundation', 'phase slug should be generated from roadmap');
+    assert.strictEqual(output.padded_phase, '01', 'padded phase should be normalized');
+  });
+
+  test('init plan-phase returns roadmap metadata even when phase directory is missing', () => {
+    fs.rmSync(path.join(tmpDir, '.planning', 'phases'), { recursive: true, force: true });
+    fs.writeFileSync(
+      path.join(tmpDir, '.planning', 'ROADMAP.md'),
+      `# Roadmap
+
+### Phase 1: Foundation
+**Goal:** Set up project
+`
+    );
+
+    const result = runGsdTools('init plan-phase 1', tmpDir);
+    assert.ok(result.success, `Command failed: ${result.error}`);
+
+    const output = JSON.parse(result.output);
+    assert.strictEqual(output.phase_found, false, 'phase directory should be marked missing');
+    assert.strictEqual(output.phase_dir_exists, false, 'phase directory flag should be false');
+    assert.strictEqual(output.phase_in_roadmap, true, 'phase should still be found in roadmap');
+    assert.strictEqual(output.phase_number, '1', 'phase number should come from roadmap');
+    assert.strictEqual(output.phase_name, 'Foundation', 'phase name should come from roadmap');
+    assert.strictEqual(output.phase_slug, 'foundation', 'phase slug should be generated');
+    assert.strictEqual(output.padded_phase, '01', 'padded phase should be normalized');
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1279,6 +1351,29 @@ describe('roadmap analyze command', () => {
     assert.strictEqual(output.phases[0].depends_on, 'Nothing');
     assert.strictEqual(output.phases[1].goal, 'Build features');
     assert.strictEqual(output.phases[1].depends_on, 'Phase 1');
+  });
+
+  test('parses level-2 phase headings', () => {
+    fs.writeFileSync(
+      path.join(tmpDir, '.planning', 'ROADMAP.md'),
+      `# Roadmap
+
+## Phase 1: Foundation
+**Goal:** Setup core project
+
+## Phase 2: API
+**Goal:** Build API
+`
+    );
+
+    const result = runGsdTools('roadmap analyze', tmpDir);
+    assert.ok(result.success, `Command failed: ${result.error}`);
+
+    const output = JSON.parse(result.output);
+    assert.strictEqual(output.phase_count, 2, 'should parse phase headings with ##');
+    assert.strictEqual(output.phases[0].number, '1', 'first phase number parsed');
+    assert.strictEqual(output.phases[0].goal, 'Setup core project', 'first phase goal parsed');
+    assert.strictEqual(output.phases[1].number, '2', 'second phase number parsed');
   });
 });
 
